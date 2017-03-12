@@ -1,9 +1,9 @@
-function HexagonGrid(canvasId, ratio, depth, size){
+function HexagonGrid(canvasId, ratio, depth, width){
 	let c = document.getElementById(canvasId);
 	this.ctx = c.getContext("2d");
 	this.ratio = ratio;
 	this.depth = depth;
-	this.rectWidth = size;
+	this.rectWidth = width;
 	this.rectHeight = this.rectWidth/this.ratio;
 	this.canvasWith = c.width;
 	this.canvasHeight = c.height;
