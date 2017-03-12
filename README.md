@@ -14,7 +14,7 @@ grid.draw();
 
 # Examples
 
-# Flat Hexagonal grid
+## Flat Hexagonal grid
 
 ```html
 <canvas id="HexCanvas" width="1500" height="500"></canvas>
@@ -25,7 +25,7 @@ var grid = new HexagonGrid('HexCanvas', 1, 0, 100);
 grid.draw();
 ```
 
-# Perspective Hexagonal grid
+## Perspective Hexagonal grid
 
 ```html
 <canvas id="HexCanvas" width="1500" height="500"></canvas>
