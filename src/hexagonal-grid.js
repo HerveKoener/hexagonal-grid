@@ -3,14 +3,19 @@ function HexagonGrid(canvasId, ratio, depth, width){
 	this.ctx = c.getContext("2d");
 	this.ratio = ratio;
 	this.depth = depth;
-	this.rectWidth = width;
+	this.width = width;
+	this.rectWidth = this.width;
 	this.rectHeight = this.rectWidth/this.ratio;
-	this.canvasWith = c.width;
+	this.canvaswidth = c.width;
 	this.canvasHeight = c.height;
 	this.currentY = this.canvasHeight;
 };
 
 HexagonGrid.prototype.draw = function() {
+	this.currentY = this.canvasHeight;
+	this.rectWidth = this.width;
+	this.rectHeight = this.rectWidth/this.ratio;
+
 	while(this.currentY > 0 && this.rectHeight > 0 && this.rectWidth > 0){
 		this.drawLine(false);
 		this.drawLine(true);
@@ -22,12 +27,12 @@ HexagonGrid.prototype.draw = function() {
 HexagonGrid.prototype.drawLine = function(reverse) {
 	let x = reverse?-1:1;
 	
-	let pointSLow = { x:this.canvasWith/2-this.rectWidth/4*x, y: this.currentY };
-	let pointSMiddle = { x:this.canvasWith/2-(this.rectWidth-this.depth)/2*x, y: this.currentY-this.rectHeight/2 };
-	let pointSHigh = { x:this.canvasWith/2-(this.rectWidth-2*this.depth)/4*x, y: this.currentY-this.rectHeight/2-(this.rectHeight-this.depth)/2 };
+	let pointSLow = { x:this.canvaswidth/2-this.rectWidth/4*x, y: this.currentY };
+	let pointSMiddle = { x:this.canvaswidth/2-(this.rectWidth-this.depth)/2*x, y: this.currentY-this.rectHeight/2 };
+	let pointSHigh = { x:this.canvaswidth/2-(this.rectWidth-2*this.depth)/4*x, y: this.currentY-this.rectHeight/2-(this.rectHeight-this.depth)/2 };
 
 	let gardian = 0;
-	while(pointSMiddle.x < this.canvasWith && pointSMiddle.x > 0 && gardian < 500){
+	while(pointSMiddle.x < this.canvaswidth && pointSMiddle.x > 0 && gardian < 500){
 		if(reverse){
 			let pointD = pointSMiddle;
 			let pointC = pointSLow;
@@ -77,3 +82,63 @@ HexagonGrid.prototype.drawHexagon = function(pointA, pointB, pointC, pointD, poi
 		this.ctx.closePath();
 		this.ctx.stroke();
 };
+
+function getPoint(r, angle){
+	return {x:r * Math.cos(angle*Math.PI/180), y:r * Math.sin(angle*Math.PI/180)};   
+}
+
+function getAngle(r, m){
+	return m/r*180/Math.PI;
+}
+
+function getPointTo(r, angle, m){
+	let p = angle+getAngle(m,r);
+	return getPoint(r, p);   
+}
+
+HexagonGrid.prototype.curvedDraw = function(x, y, aFrom, aTo) {
+	this.rectWidth = this.width/2;
+	this.rectHeight = this.rectWidth/this.ratio;
+	let nextAngle = aFrom;
+	let diag = Math.sqrt(Math.pow(this.canvasHeight,2)+Math.pow(this.canvaswidth,2));
+	let distMax = diag+Math.sqrt(Math.pow(x,2)+Math.pow(y,2));
+    distMax-= x>0?x:0;
+    distMax-= y>0?y:0;
+	let column = 0;
+    for(var angle = aFrom; angle < aTo; angle=nextAngle){
+      nextAngle = angle + getAngle(diag, 1.5*this.rectWidth-2*this.depth);
+	  if(nextAngle<=angle){
+		return;
+	  }
+	  let edgeAngle = angle + getAngle(diag, 2*this.rectWidth-3*this.depth);
+      let curheight = this.rectHeight;
+      let dist = distMax;
+	  if(column%2 != 0){
+		dist = distMax-curheight;
+		curheight-= this.depth;
+	  }
+      
+      while(curheight > 0 && dist > distMax-diag-2*curheight){
+        let a = getPoint(dist, angle);
+        let d = getPoint(dist+2*curheight+3*this.depth, angle);
+
+        let b = getPoint(dist, edgeAngle);
+        let c = getPoint(dist+2*curheight+3*this.depth, edgeAngle);
+		dist-=2*curheight;        
+        curheight-=2*this.depth;
+		
+		let bc = {x: b.x-c.x , y: b.y-c.y };//-10,-10
+		let ba = {x: b.x-a.x , y: b.y-a.y };//-30,-30
+		let cd ={x: c.x-d.x , y: c.y-d.y };//-10,-30
+		let da ={x: d.x-a.x , y: d.y-a.y };//-10,10
+		this.drawHexagon(
+		{x:x+b.x-bc.x/2, y:y+b.y-bc.y/2},// 15,15
+		{x:x+c.x-cd.x/4, y:y+c.y-cd.y/4},//22.5,35
+		{x:x+c.x-cd.x/4*3, y:y+c.y-cd.y/4*3},//22.75,35
+		{x:x+d.x-da.x/2, y:y+d.y-da.y/2},
+		{x:x+b.x-ba.x/4*3, y:y+b.y-ba.y/4*3},
+		{x:x+b.x-ba.x/4, y:y+b.y-ba.y/4});
+      }
+	  column++;
+  }
+}
