@@ -61,4 +61,4 @@ grid.curvedDraw(0, 0, 0, 90);
 
 # License
 
-MIT
+Apache License 2.0
